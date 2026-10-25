@@ -6,6 +6,6 @@
 
 在 GitHub 仓库 Settings → Pages 中选择 GitHub Actions，推送 main 分支后自动发布。
 
-第三、第四、第六章通过 iframe 加载原 ChatGPT Sites 网站，仍依赖这些外部站点的可用性及嵌入权限。
+第三、第四、第六章已从原在线公开页面恢复到 `dist/chapters/third-star/`、`fourth-star/` 和 `sixth-star/`，代码及图片均由本仓库托管，不再依赖原 ChatGPT Sites。第四章分享链接指向当前页面。
 
 此目录不含原 Sites 的身份配置、npm 配置或 Git 历史。

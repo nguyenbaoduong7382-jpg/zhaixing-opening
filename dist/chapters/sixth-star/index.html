@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="陪默默走过冬雪、花海与海岸，寻找遗失的声音。" />
+  <title>默默，去听世界</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23060509'/%3E%3Cpath d='M14 17c27-9 42 5 30 15S9 31 18 43s31 3 32-7' fill='none' stroke='%23d9ff5b' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; overflow: hidden; background: #060509; }
+    body { color: #f6f3fb; }
+    .shell { position: relative; height: 100%; min-height: 520px; overflow: hidden; isolation: isolate; background: radial-gradient(circle at 50% 48%, #1d1a27 0, #0b0910 37%, #050407 70%); }
+    .shell::before { content: ""; position: absolute; inset: 0; z-index: 0; opacity: .34; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(circle, #000 10%, transparent 68%); }
+    .particles { position:absolute; inset:0; z-index:1; width:100%; height:100%; pointer-events:none; opacity:.9; }
+    header { position: absolute; z-index: 20; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 26px 32px; pointer-events: none; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: .78rem; font-weight: 760; letter-spacing: .14em; text-transform: uppercase; }
+    .mark { display:grid; place-items:center; width: 32px; height: 32px; border-radius: 50%; color:#0b0b0c; background: #d9ff5b; font-size: 18px; box-shadow: 0 0 30px rgba(217,255,91,.14); }
+    .status { color: #aaa4b3; font-size: .75rem; letter-spacing: .08em; }
+    .status::before { content:""; display:inline-block; width:6px; height:6px; margin-right:9px; border-radius:50%; background:#d9ff5b; box-shadow:0 0 11px #d9ff5b; }
+    .spiral { position:absolute; inset:0; z-index:2; overflow:hidden; perspective:1000px; cursor:grab; touch-action:pan-x; user-select:none; }
+    .spiral.dragging { cursor:grabbing; }
+    .stage { position:absolute; inset:0; transform-style:preserve-3d; }
+    .card { position:absolute; top:50%; left:50%; display:block; width:300px; height:188px; overflow:hidden; border:1px solid rgba(255,255,255,.34); border-radius:16px; background:#14111a; box-shadow:0 24px 70px rgba(0,0,0,.5), inset 0 1px rgba(255,255,255,.16); transform-style:preserve-3d; backface-visibility:hidden; will-change:transform,opacity,filter; }
+    .card img { width:100%; height:100%; display:block; object-fit:cover; image-rendering:auto; user-select:none; pointer-events:none; filter:saturate(1.02) contrast(1.03); }
+    .card::after { content:""; position:absolute; inset:0; background:linear-gradient(145deg, rgba(255,255,255,.15), transparent 35%, rgba(0,0,0,.12)); pointer-events:none; }
+    .copy { position:absolute; z-index:10; left:32px; bottom:28px; max-width:310px; pointer-events:none; }
+    .eyebrow { color:#d9ff5b; font-size:.69rem; font-weight:750; letter-spacing:.17em; text-transform:uppercase; }
+    h1 { margin:9px 0 8px; font-size:clamp(1.9rem,4vw,3.3rem); line-height:.94; letter-spacing:-.055em; font-weight:650; }
+    .copy p { min-height:2.9em; margin:0; color:#aaa4b3; font-size:.88rem; line-height:1.65; text-wrap:balance; }
+    .chapter { display:inline-block; min-width:5.5em; color:#66606e; margin-left:8px; font-variant-numeric:tabular-nums; }
+    .hint { position:absolute; z-index:10; right:32px; bottom:30px; display:flex; align-items:center; gap:10px; color:#b6b0be; font-size:.76rem; pointer-events:none; }
+    .mouse { width:23px; height:34px; border:1px solid #625d6a; border-radius:14px; position:relative; }
+    .mouse::after { content:""; position:absolute; left:50%; top:7px; width:3px; height:7px; transform:translateX(-50%); border-radius:2px; background:#d9ff5b; animation:scroll 1.7s ease-in-out infinite; }
+    @keyframes scroll { 0%,100% { transform:translate(-50%,0); opacity:.35 } 45% { transform:translate(-50%,9px); opacity:1 } }
+    @media (max-width: 680px) { header { padding:20px; } .status { display:none; } .copy { left:20px; bottom:22px; } .copy p { max-width:240px; } .hint { right:20px; bottom:24px; } .hint span { display:none; } .card { width:180px; height:112px; border-radius:12px; } }
+    @media (prefers-reduced-motion: reduce) { .mouse::after { animation:none; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><div class="brand"><span class="mark">默</span><span>默默的旅途</span></div><div class="status">正在寻找声音</div></header>
+    <canvas class="particles" aria-hidden="true"></canvas>
+    <section class="spiral" aria-label="无限螺旋图片画廊">
+      <div class="stage" role="list"></div>
+    </section>
+    <div class="copy"><div class="eyebrow">寻找遗失的声音 <span class="chapter" id="chapter">01 / 10</span></div><h1>默默，<br>去听世界</h1><p id="story-line">房间很安静，连自己的声音也听不见。</p></div>
+    <div class="hint"><div class="mouse"></div><span>拖动，陪默默继续前行</span></div>
+  </main>
+  <script>
+    const particleCanvas = document.querySelector('.particles');
+    const particleCtx = particleCanvas.getContext('2d');
+    const particlePointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    let particleWidth = 0, particleHeight = 0, particleDpr = 1;
+    const particlePalette = ['#ffffff', '#d9ff5b', '#72dcff'];
+    const particleCount = innerWidth < 680 ? 100 : 190;
+    const particles = Array.from({ length: particleCount }, () => ({
+      x: Math.random(), y: Math.random(), z: Math.random(),
+      phase: Math.random() * Math.PI * 2,
+      drift: .35 + Math.random() * .75,
+      size: .45 + Math.random() * 1.8,
+      color: particlePalette[Math.floor(Math.random() * particlePalette.length)]
+    }));
+    function resizeParticles() {
+      particleWidth = innerWidth; particleHeight = innerHeight;
+      particleDpr = Math.min(devicePixelRatio || 1, 1.5);
+      particleCanvas.width = Math.round(particleWidth * particleDpr);
+      particleCanvas.height = Math.round(particleHeight * particleDpr);
+      particleCanvas.style.width = `${particleWidth}px`;
+      particleCanvas.style.height = `${particleHeight}px`;
+      particleCtx.setTransform(particleDpr, 0, 0, particleDpr, 0, 0);
+    }
+    addEventListener('resize', resizeParticles, { passive: true });
+    addEventListener('pointermove', event => {
+      particlePointer.targetX = event.clientX / Math.max(particleWidth, 1) - .5;
+      particlePointer.targetY = event.clientY / Math.max(particleHeight, 1) - .5;
+    }, { passive: true });
+    resizeParticles();
+    function drawParticles(time) {
+      particleCtx.clearRect(0, 0, particleWidth, particleHeight);
+      particlePointer.x += (particlePointer.targetX - particlePointer.x) * .035;
+      particlePointer.y += (particlePointer.targetY - particlePointer.y) * .035;
+      const slowTime = reduced.matches ? 0 : time * .00008;
+      for (const particle of particles) {
+        const depth = .35 + particle.z * .9;
+        const swayX = Math.sin(slowTime * particle.drift * 13 + particle.phase) * 22 * depth;
+        const swayY = Math.cos(slowTime * particle.drift * 9 + particle.phase) * 16 * depth;
+        const parallaxX = -particlePointer.x * 60 * depth;
+        const parallaxY = -particlePointer.y * 42 * depth;
+        const x = ((particle.x * particleWidth + swayX + parallaxX) % particleWidth + particleWidth) % particleWidth;
+        const y = ((particle.y * particleHeight + swayY + parallaxY) % particleHeight + particleHeight) % particleHeight;
+        const radius = particle.size * depth;
+        particleCtx.globalAlpha = .18 + particle.z * .58;
+        particleCtx.fillStyle = particle.color;
+        particleCtx.shadowColor = particle.color;
+        particleCtx.shadowBlur = radius * 5;
+        particleCtx.beginPath(); particleCtx.arc(x, y, radius, 0, Math.PI * 2); particleCtx.fill();
+      }
+      particleCtx.globalAlpha = 1; particleCtx.shadowBlur = 0;
+      requestAnimationFrame(drawParticles);
+    }
+    requestAnimationFrame(drawParticles);
+
+    const images = Array.from({ length: 10 }, (_, index) =>
+      `assets/gallery/scene-${String(index + 1).padStart(2, '0')}.png`
+    );
+    const storyLines = [
+      '房间很安静，连自己的声音也听不见。',
+      '雪会记住，每一个经过这里的脚步。',
+      '天空很大，默默暂时不知道该往哪里走。',
+      '风从山那边来，像一句没有说完的话。',
+      '漫长的旅途中，也要停下来照顾好自己。',
+      '有些路似曾相识，第二次走过却有了新的回响。',
+      '花瓣落下的时候，声音轻得像一个秘密。',
+      '海浪说了很多遍，默默终于听懂了一点。',
+      '在高高的树屋里，默默安静地等风经过。',
+      '原来声音没有消失，它一直藏在沿途的回应里。'
+    ];
+    const storyLine = document.querySelector('#story-line');
+    const chapter = document.querySelector('#chapter');
+    let activeStory = 0;
+    const stage = document.querySelector('.stage');
+    const root = document.querySelector('.spiral');
+    const cards = images.map((id, i) => {
+      const card = document.createElement('div'); card.className='card'; card.role='listitem'; card.ariaLabel=`风景图片 ${i+1}`;
+      card.innerHTML=`<img src="${id}" alt="蓝色耳机兔场景 ${i+1}" ${i>5?'loading="lazy"':''} draggable="false">`;
+      stage.appendChild(card); return card;
+    });
+    const clamp=(v,a,b)=>Math.min(Math.max(v,a),b), mod=(v,d)=>((v%d)+d)%d;
+    const smoothstep=(a,b,v)=>{const x=clamp((v-a)/(b-a||1),0,1);return x*x*(3-2*x)};
+    let progress=0,target=0,autoSpeed=0,last=performance.now(),dragging=false,lastY=0,hover=false;
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+    function render(now){
+      const dt=Math.min((now-last)/1000,.05); last=now;
+      const desired=!reduced.matches&&!hover&&!dragging?.58:0; autoSpeed+=(desired-autoSpeed)*(1-Math.exp(-dt*7)); target+=autoSpeed*dt; progress+=(target-progress)*(1-Math.exp(-dt*(dragging?22:11)));
+      const count=cards.length, half=count/2, w=root.clientWidth, h=root.clientHeight;
+      const cw=w<680?180:300, ch=w<680?112:188, fit=Math.min(1,w/(cw*2.5),h/(ch*2.5)); const radius=Math.min(w<680?210:360,Math.max(128,w*.34))*fit; const spacing=(w<680?84:118)*fit;
+      const nextStory = Math.round(mod(progress, count)) % count;
+      if (nextStory !== activeStory) {
+        activeStory = nextStory;
+        storyLine.textContent = storyLines[activeStory];
+        chapter.textContent = `${String(activeStory + 1).padStart(2, '0')} / ${count}`;
+        storyLine.animate([{ opacity:.15, transform:'translateY(5px)' }, { opacity:1, transform:'translateY(0)' }], { duration:420, easing:'ease-out' });
+      }
+      cards.forEach((card,i)=>{ let o=mod(i-progress+half,count)-half; const edge=Math.min(Math.abs(o)/half,1); const opacity=1-smoothstep(.72,1,edge); const focus=1-Math.min(Math.abs(o)/(7*.65),1); const angle=o*(360/7)-9; const a=angle*Math.PI/180; const x=Math.sin(a)*radius, z=Math.cos(a)*radius; const depthScale=clamp(1000/Math.max(1000-z,1),.72,1.45); const scale=(1+.18*focus)*fit*depthScale; const blur=1.4*smoothstep(.7,1,edge);
+        card.style.transform=`translate(-50%,-50%) translate3d(${x}px,${o*spacing}px,0) rotateZ(-3deg) scale(${scale})`; card.style.opacity=opacity.toFixed(3); card.style.filter=blur>.01?`blur(${blur.toFixed(2)}px)`:'none'; card.style.zIndex=Math.round(((z/radius+1)/2)*10000)+i; });
+      requestAnimationFrame(render);
+    }
+    root.addEventListener('pointerdown',e=>{if(e.button!==0)return;dragging=true;lastY=e.clientY;root.setPointerCapture(e.pointerId);root.classList.add('dragging');target=progress});
+    root.addEventListener('pointermove',e=>{if(!dragging)return;const d=e.clientY-lastY;lastY=e.clientY;target-=d/68});
+    const stop=e=>{dragging=false;root.classList.remove('dragging');if(root.hasPointerCapture?.(e.pointerId))root.releasePointerCapture(e.pointerId)};
+    root.addEventListener('pointerup',stop); root.addEventListener('pointercancel',stop); root.addEventListener('mouseenter',()=>hover=true); root.addEventListener('mouseleave',()=>{hover=false;dragging=false});
+    root.addEventListener('wheel',e=>{target+=clamp(e.deltaY/120,-1.5,1.5)},{passive:true});
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
