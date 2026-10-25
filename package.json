@@ -1,0 +1,8 @@
+{
+  "name": "zhaixing-opening",
+  "private": true,
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "node validate.mjs"
+  }
+}
