@@ -152,6 +152,27 @@ document.addEventListener('keydown',event=>{
 
 function setStoryProgress(progress){storyPlayer.setTarget(progress);}
 
+// Finish the first star before a fresh wheel gesture can enter chapter two.
+let lastStoryWheel=0,chapterEntryUntil=0;
+window.addEventListener('wheel',event=>{
+  if(!opening.hidden||storyPreview.hidden)return;
+  const now=performance.now(),gap=now-lastStoryWheel;
+  lastStoryWheel=now;
+  if(now<chapterEntryUntil){event.preventDefault();return;}
+  const end=storyStage.offsetTop+storyStage.offsetHeight-innerHeight;
+  const y=window.scrollY;
+  const delta=event.deltaY*(event.deltaMode===1?18:event.deltaMode===2?innerHeight:1);
+  if(delta<=0||y>end+2)return;
+  if(y+delta>=end){
+    event.preventDefault();
+    if(y<end-2){window.scrollTo({top:end,behavior:'instant'});setStoryProgress(1);return;}
+    if(storyFrame.dataset.frame!=='241'||gap<300)return;
+    chapterEntryUntil=now+700;
+    primeChapter(0);
+    document.querySelector('.chapter-two').scrollIntoView({behavior:'instant',block:'start'});
+  }
+},{passive:false});
+
 function initStoryExperience(){
   if(storyReady)return;storyReady=true;
   storyPlayer.preload();storyPlayer.resize();
