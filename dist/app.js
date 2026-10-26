@@ -39,7 +39,7 @@ async function prepareOpening(){
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),45000);
   try{
-    const response=await fetch('./assets/opening-ready.mp4',{signal:controller.signal});
+    const response=await fetch('./assets/opening-clear.mp4',{signal:controller.signal});
     if(!response.ok)throw new Error('Video unavailable');
     const blob=await response.blob();
     video.src=URL.createObjectURL(blob);video.load();
