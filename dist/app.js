@@ -29,6 +29,31 @@ let storyReady=false,storyTrigger=null;
 video.loop=false;video.autoplay=false;video.pause();
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 const storyPlayer=createStorySequence(storyFrame,storyVisual,242);
+const openingStatus=document.querySelector('#openingStatus');
+const openingRetry=document.querySelector('#openingRetry');
+let openingReady=false,openingLoading=false;
+async function prepareOpening(){
+  if(openingLoading||openingReady)return;
+  openingLoading=true;openingRetry.hidden=true;
+  openingStatus.hidden=false;openingStatus.textContent='正在准备开场，请稍候…';
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),45000);
+  try{
+    const response=await fetch('./assets/opening-ready.mp4',{signal:controller.signal});
+    if(!response.ok)throw new Error('Video unavailable');
+    const blob=await response.blob();
+    video.src=URL.createObjectURL(blob);video.load();
+    openingStatus.textContent='正在打开画面…';
+  }catch{
+    openingStatus.textContent='开场加载较慢，可以重试或跳过开场';openingRetry.hidden=false;
+  }finally{clearTimeout(timeout);openingLoading=false;}
+}
+openingRetry.addEventListener('click',prepareOpening);
+document.querySelector('#skipOpening').addEventListener('click',enterFirstStage);
+video.addEventListener('loadeddata',()=>{
+  openingReady=true;openingStatus.textContent='向下滚动，开启旅程';
+},{once:true});
+prepareOpening();
 // Keep the opening's network and decoder free; warm only one story frame.
 video.addEventListener('loadeddata',()=>storyPlayer.warmup(),{once:true});
 
@@ -40,7 +65,7 @@ function renderOpening(time){
 // Follow the last decoded frame so slow seeks never accumulate a jump backlog.
 function seekFrame(now){
   seekRAF=0;
-  if(opening.hidden||transitioning||duration<=0||video.readyState<2||video.seeking)return;
+  if(!openingReady||opening.hidden||transitioning||duration<=0||video.readyState<2||video.seeking)return;
   const frameDuration=1/30;
   const endTime=Math.max(0,(Math.ceil(duration*30)-2)/30);
   const goal=clamp(Math.round(targetTime*30)/30,0,endTime);
@@ -70,7 +95,8 @@ function queueOpeningSeek(){
   if(!seekRAF&&!opening.hidden&&!transitioning)seekRAF=requestAnimationFrame(seekFrame);
 }
 function setTarget(time){
-  if(duration<=0)return;
+  if(!openingReady||duration<=0)return;
+  openingStatus.hidden=true;
   targetTime=clamp(time,0,duration);
   clearTimeout(openingEndTimer);openingEndTimer=0;
   queueOpeningSeek();

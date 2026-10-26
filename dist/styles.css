@@ -5,7 +5,7 @@ body { margin:0; min-width:320px; overflow:hidden; font-family:"Microsoft YaHei"
 button { font:inherit; color:inherit; }
 button:focus-visible { outline:3px solid var(--star); outline-offset:4px; }
 .opening { position:relative; min-height:100svh; overflow:hidden; isolation:isolate; background:var(--space); }
-.media { position:absolute; inset:0; z-index:-2; overflow:hidden; background:url("./assets/opening-poster.png") center/cover no-repeat; }
+.media { position:absolute; inset:0; z-index:-2; overflow:hidden; background:url("./assets/opening-poster.jpg") center/cover no-repeat; }
 .media video { width:100%; height:100%; object-fit:cover; }
 #openingFrame { display:none; }
 .held-frame { position:absolute; inset:0; z-index:0; width:100%; height:100%; pointer-events:none; }
@@ -79,3 +79,5 @@ button:focus-visible { outline:3px solid var(--star); outline-offset:4px; }
 
 .music-status { position:fixed; z-index:31; top:76px; right:24px; max-width:calc(100vw - 48px); padding:10px 14px; color:#fff4d3; background:rgba(0,0,0,.8); border-radius:10px; font-size:13px; }
 .music-status[hidden] { display:none; }
+
+.opening-controls{position:absolute;z-index:5;bottom:80px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;width:90%;font-size:13px;text-shadow:0 2px 6px #000}.opening-controls button{border:1px solid #ffffff66;border-radius:20px;padding:9px 14px;background:#030708bb;cursor:pointer}.opening-controls [hidden]{display:none}
