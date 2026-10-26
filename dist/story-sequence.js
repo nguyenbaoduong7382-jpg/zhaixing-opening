@@ -5,8 +5,7 @@ function createStorySequence(canvas, container, count) {
   const status = document.querySelector('#storyLoading');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let target = 0, progress = 0, raf = 0, lastTime = 0, drawn = -1;
-  let next = 0, started = false, active = false, failures = [];
-  const pending = new Map();
+  let started = false, active = false;
   let width = 1, height = 1;
   function wake() {
     if (active && !document.hidden && !raf) raf = requestAnimationFrame(tick);
@@ -57,45 +56,45 @@ function createStorySequence(canvas, container, count) {
     document.documentElement.style.setProperty('--stage-progress', `${progress * 100}%`);
     if (progress !== target) wake();
   }
-  function load(index) {
-    if (blobs.has(index)) return Promise.resolve();
-    if (pending.has(index)) return pending.get(index);
-    const task = fetchFrame(index).finally(() => pending.delete(index));
-    pending.set(index, task);
-    return task;
-  }
-  async function fetchFrame(index) {
-    try {
-      const response = await fetch(`./assets/story-frames/${String(index).padStart(4, '0')}.webp`);
-      if (!response.ok) throw new Error('Frame unavailable');
-      blobs.set(index, await response.blob());
-      status.textContent = `准备星空 ${Math.round(blobs.size / count * 100)}%`;
-      status.hidden = blobs.size === count;
-      if (index === 0) decode(0);
-      wake();
-    } catch { failures.push(index); }
-  }
+  let ready = false;
   async function preload() {
-    if (started) return;
+    if (started || ready) return;
     started = true;
-    await Promise.all(Array.from({ length: 2 }, async () => {
-      while (next < count) await load(next++);
-    }));
-    const retry = failures; failures = [];
-    for (const index of retry) await load(index);
-    if (failures.length) {
-      status.hidden = false;
-      status.replaceChildren(document.createTextNode('部分画面未加载 '));
+    status.hidden = false;
+    status.textContent = '正在准备星空，请等待加载完成后再滑动…';
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 120000);
+    try {
+      const response = await fetch('./assets/story-frames.pack', {signal: controller.signal});
+      if (!response.ok) throw new Error('Sequence unavailable');
+      const total = Number(response.headers.get('content-length'));
+      const reader = response.body.getReader(), chunks = [];
+      let received = 0;
+      while (true) {
+        const {done, value} = await reader.read();
+        if (done) break;
+        chunks.push(value); received += value.byteLength;
+        status.textContent = '准备星空 ' + (total ? Math.min(99, Math.round(received / total * 100)) + '%' : '') + ' · 请等待加载完成后再滑动';
+      }
+      const bundle = new Blob(chunks);
+      const headerSize = new DataView(await bundle.slice(0, 4).arrayBuffer()).getUint32(0, true);
+      if (headerSize > 10000) throw new Error('Invalid header');
+      const sizes = JSON.parse(await bundle.slice(4, 4 + headerSize).text());
+      if (sizes.length !== count || sizes.some(n => !Number.isInteger(n) || n <= 0) || sizes.reduce((a,b)=>a+b,4+headerSize) !== bundle.size) throw new Error('Incomplete sequence');
+      let offset = 4 + headerSize;
+      sizes.forEach((size, index) => { blobs.set(index, bundle.slice(offset, offset + size, 'image/webp')); offset += size; });
+      await decode(0);
+      if (!bitmaps.has(0)) throw new Error('First frame unavailable');
+      ready = true;
+      status.textContent = '星空已就绪，可以向下滑动欣赏了';
+      canvas.dispatchEvent(new Event('storyready'));
+      wake();
+    } catch {
+      started = false;
+      status.replaceChildren(document.createTextNode('加载未完成，请稍候重试，暂时不要滑动 '));
       const button = document.createElement('button');
-      button.textContent = '重试';
-      button.onclick = async () => {
-        button.disabled = true;
-        const pending = failures; failures = [];
-        for (const index of pending) await load(index);
-        if (failures.length) { button.disabled = false; status.replaceChildren(button); }
-      };
-      status.append(button);
-    }
+      button.textContent = '重试加载'; button.onclick = preload; status.append(button);
+    } finally { clearTimeout(timer); }
   }
   function resize() {
     const r = container.getBoundingClientRect();
@@ -116,7 +115,7 @@ function createStorySequence(canvas, container, count) {
     if (!document.hidden) { lastTime = 0; wake(); }
   });
   return {
-    preload, resize, warmup: () => load(0),
-    setTarget(value) { target = Math.max(0, Math.min(1, value)); wake(); }
+    preload, resize, isReady: () => ready,
+    setTarget(value) { if (ready && value > 0) status.hidden = true; target = Math.max(0, Math.min(1, value)); wake(); }
   };
 }

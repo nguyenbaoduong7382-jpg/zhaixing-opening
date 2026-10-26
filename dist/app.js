@@ -54,8 +54,19 @@ video.addEventListener('loadeddata',()=>{
   openingReady=true;openingStatus.textContent='向下滚动，开启旅程';
 },{once:true});
 prepareOpening();
-// Keep the opening's network and decoder free; warm only one story frame.
-video.addEventListener('loadeddata',()=>storyPlayer.warmup(),{once:true});
+// Start the packed story download only after the opening video is fully local.
+video.addEventListener('loadeddata',()=>storyPlayer.preload(),{once:true});
+storyFrame.addEventListener('storyready',()=>{
+  if(opening.hidden)body.style.overflow='auto';
+});
+function guardStoryLoading(event){
+  if(!opening.hidden||storyPlayer.isReady())return;
+  if(event.type==='keydown'&&!['ArrowDown','ArrowUp','PageDown','PageUp',' ','Home','End'].includes(event.key))return;
+  event.preventDefault();
+}
+window.addEventListener('wheel',guardStoryLoading,{passive:false,capture:true});
+window.addEventListener('touchmove',guardStoryLoading,{passive:false,capture:true});
+window.addEventListener('keydown',guardStoryLoading,{capture:true});
 
 function renderOpening(time){
   const progress=duration>0?clamp(time/duration,0,1):0;
@@ -104,7 +115,7 @@ function setTarget(time){
 function enterFirstStage(){
   if(transitioning)return;
   transitioning=true;cancelAnimationFrame(seekRAF);seekRAF=0;clearTimeout(openingEndTimer);openingEndTimer=0;video.pause();
-  opening.hidden=true;storyPreview.hidden=false;body.style.overflow='auto';window.scrollTo(0,0);
+  opening.hidden=true;storyPreview.hidden=false;body.style.overflow=storyPlayer.isReady()?'auto':'hidden';window.scrollTo(0,0);
   initStoryExperience();storyTrigger?.enable();window.ScrollTrigger?.refresh();
 }
 function returnToOpening(){
@@ -179,7 +190,7 @@ function setStoryProgress(progress){storyPlayer.setTarget(progress);}
 // Finish the first star before a fresh wheel gesture can enter chapter two.
 let lastStoryWheel=0,chapterEntryUntil=0;
 window.addEventListener('wheel',event=>{
-  if(!opening.hidden||storyPreview.hidden)return;
+  if(!opening.hidden||storyPreview.hidden||!storyPlayer.isReady())return;
   const now=performance.now(),gap=now-lastStoryWheel;
   lastStoryWheel=now;
   if(now<chapterEntryUntil){event.preventDefault();return;}
