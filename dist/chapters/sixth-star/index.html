@@ -129,11 +129,11 @@
     });
     const clamp=(v,a,b)=>Math.min(Math.max(v,a),b), mod=(v,d)=>((v%d)+d)%d;
     const smoothstep=(a,b,v)=>{const x=clamp((v-a)/(b-a||1),0,1);return x*x*(3-2*x)};
-    let progress=0,target=0,autoSpeed=0,last=performance.now(),dragging=false,lastY=0,hover=false;
+    let progress=0,target=0,autoSpeed=0,last=performance.now(),dragging=false,lastY=0;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     function render(now){
       const dt=Math.min((now-last)/1000,.05); last=now;
-      const desired=!reduced.matches&&!hover&&!dragging?.58:0; autoSpeed+=(desired-autoSpeed)*(1-Math.exp(-dt*7)); target+=autoSpeed*dt; progress+=(target-progress)*(1-Math.exp(-dt*(dragging?22:11)));
+      const desired=!reduced.matches&&!dragging?.58:0; autoSpeed+=(desired-autoSpeed)*(1-Math.exp(-dt*7)); target+=autoSpeed*dt; progress+=(target-progress)*(1-Math.exp(-dt*(dragging?22:11)));
       const count=cards.length, half=count/2, w=root.clientWidth, h=root.clientHeight;
       const cw=w<680?180:300, ch=w<680?112:188, fit=Math.min(1,w/(cw*2.5),h/(ch*2.5)); const radius=Math.min(w<680?210:360,Math.max(128,w*.34))*fit; const spacing=(w<680?84:118)*fit;
       const nextStory = Math.round(mod(progress, count)) % count;
@@ -150,7 +150,8 @@
     root.addEventListener('pointerdown',e=>{if(e.button!==0)return;dragging=true;lastY=e.clientY;root.setPointerCapture(e.pointerId);root.classList.add('dragging');target=progress});
     root.addEventListener('pointermove',e=>{if(!dragging)return;const d=e.clientY-lastY;lastY=e.clientY;target-=d/68});
     const stop=e=>{dragging=false;root.classList.remove('dragging');if(root.hasPointerCapture?.(e.pointerId))root.releasePointerCapture(e.pointerId)};
-    root.addEventListener('pointerup',stop); root.addEventListener('pointercancel',stop); root.addEventListener('mouseenter',()=>hover=true); root.addEventListener('mouseleave',()=>{hover=false;dragging=false});
+    root.addEventListener('pointerup',stop); root.addEventListener('pointercancel',stop); root.addEventListener('lostpointercapture',stop);
+    addEventListener('blur',()=>{dragging=false;root.classList.remove('dragging')});
     root.addEventListener('wheel',e=>{target+=clamp(e.deltaY/120,-1.5,1.5)},{passive:true});
     requestAnimationFrame(render);
   </script>
