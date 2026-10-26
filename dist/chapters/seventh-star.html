@@ -10,15 +10,16 @@
 </head>
 <body>
   <main class="wish-world" id="world">
-    <div class="sky"></div><video class="meteor-film" id="meteorFilm" muted loop playsinline preload="auto"><source src="../assets/seventh-star/meteor-shower.mkv" type="video/x-matroska" /></video><div class="shade"></div><button class="rabbit" id="rabbit" type="button" aria-label="点击左下角看流星的小兔"></button>
+    <div class="sky"></div><video class="meteor-film" id="meteorFilm" muted loop playsinline preload="metadata" poster="../assets/seventh-star/meteor-poster.jpg"><source src="../assets/seventh-star/meteor-shower.mp4" type="video/mp4" /></video><div class="shade"></div><button class="rabbit" id="rabbit" type="button" aria-label="点击左下角看流星的小兔"></button>
     <div class="bubble" id="bubble"><img src="../assets/seventh-star/meteor-bubble.png" alt="开始下流星雨了，许个愿望吧！" /></div>
     <section class="wish-panel" id="wishPanel" aria-live="polite"><h2>写下你的心愿</h2><p>让这场流星雨，把它带往星空深处。</p><textarea id="wishInput" maxlength="120" placeholder="我希望……"></textarea><button id="sendWish" type="button">把心愿交给流星</button><div class="blessing" id="blessing"></div></section>
     <div class="hint" id="hint">点击左下角小兔，听听它要说什么</div>
   </main>
   <script>
     const rabbit=document.querySelector('#rabbit'),bubble=document.querySelector('#bubble'),film=document.querySelector('#meteorFilm'),panel=document.querySelector('#wishPanel'),hint=document.querySelector('#hint'),input=document.querySelector('#wishInput'),send=document.querySelector('#sendWish'),blessing=document.querySelector('#blessing');let step=0,locked=false;
-    film.addEventListener('loadeddata',()=>{film.pause();film.currentTime=0},{once:true});
-    function advance(){if(locked||step>=3)return;locked=true;step++;if(step===1){bubble.classList.add('show');hint.textContent='再向下滚动，和流星一起许愿'}if(step===2){film.play().catch(()=>{});hint.textContent='流星划过夜空，写下你的心愿'}if(step===3){panel.classList.add('show');hint.style.opacity='0'}setTimeout(()=>locked=false,650)}
+    film.addEventListener('loadeddata',()=>{if(step<2){film.pause();film.currentTime=0}},{once:true});
+    film.addEventListener('error',()=>{film.style.display='none';document.querySelector('.sky').style.cssText='opacity:1;background:url(../assets/seventh-star/meteor-poster.jpg) center/cover';hint.textContent='视频暂时无法加载，点击小兔仍可继续许愿'});
+    function advance(){if(locked||step>=3)return;locked=true;step++;if(step===1){bubble.classList.add('show');hint.textContent='再向下滚动，和流星一起许愿'}if(step===2){hint.textContent='流星划过夜空，写下你的心愿';film.play().catch(()=>{hint.textContent='视频暂时无法播放，继续向下滚动也可以许愿'})}if(step===3){panel.classList.add('show');hint.style.opacity='0'}setTimeout(()=>locked=false,650)}
     rabbit.addEventListener('click',()=>{if(step===0)advance()});addEventListener('wheel',event=>{if(event.deltaY>5&&step>0)advance()},{passive:true});addEventListener('touchend',()=>{if(step>0)advance()},{passive:true});document.addEventListener('keydown',event=>{if(['ArrowDown','PageDown',' '].includes(event.key)&&step>0){event.preventDefault();advance()}});
     send.addEventListener('click',()=>{const wish=input.value.trim();if(!wish){input.focus();return}panel.classList.add('sent');blessing.textContent='小兔把“'+wish+'”轻轻放进流星的尾光里。愿它穿过漫长夜空，落在你最想抵达的地方。';blessing.classList.add('show');bubble.classList.remove('show')});
   </script>
