@@ -29,10 +29,8 @@ let storyReady=false,storyTrigger=null;
 video.loop=false;video.autoplay=false;video.pause();
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 const storyPlayer=createStorySequence(storyFrame,storyVisual,242);
-video.addEventListener('loadeddata',()=>{
-  if('requestIdleCallback' in window)requestIdleCallback(()=>storyPlayer.preload(),{timeout:2000});
-  else setTimeout(()=>storyPlayer.preload(),1200);
-},{once:true});
+// Keep the opening's network and decoder free; warm only one story frame.
+video.addEventListener('loadeddata',()=>storyPlayer.warmup(),{once:true});
 
 function renderOpening(time){
   const progress=duration>0?clamp(time/duration,0,1):0;
@@ -81,7 +79,7 @@ function enterFirstStage(){
   if(transitioning)return;
   transitioning=true;cancelAnimationFrame(seekRAF);seekRAF=0;clearTimeout(openingEndTimer);openingEndTimer=0;video.pause();
   opening.hidden=true;storyPreview.hidden=false;body.style.overflow='auto';window.scrollTo(0,0);
-  initStoryExperience();primeChapter(0);storyTrigger?.enable();window.ScrollTrigger?.refresh();
+  initStoryExperience();storyTrigger?.enable();window.ScrollTrigger?.refresh();
 }
 function returnToOpening(){
   storyTrigger?.disable();storyPreview.hidden=true;opening.hidden=false;body.style.overflow='hidden';
@@ -251,7 +249,7 @@ const chapterLoader=new IntersectionObserver(entries=>{
     if(frame){frame.src=frame.dataset.src;frame.removeAttribute('data-src');}
     chapterLoader.unobserve(entry.target);
   }
-},{rootMargin:'250% 0px'});
+},{rootMargin:'50% 0px'});
 document.querySelectorAll('.chapter-panel').forEach(panel=>chapterLoader.observe(panel));
 function primeChapter(index){
   const panel=document.querySelectorAll('.chapter-panel')[index];

@@ -6,6 +6,7 @@ function createStorySequence(canvas, container, count) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let target = 0, progress = 0, raf = 0, lastTime = 0, drawn = -1;
   let next = 0, started = false, active = false, failures = [];
+  const pending = new Map();
   let width = 1, height = 1;
   function wake() {
     if (active && !document.hidden && !raf) raf = requestAnimationFrame(tick);
@@ -56,7 +57,14 @@ function createStorySequence(canvas, container, count) {
     document.documentElement.style.setProperty('--stage-progress', `${progress * 100}%`);
     if (progress !== target) wake();
   }
-  async function load(index) {
+  function load(index) {
+    if (blobs.has(index)) return Promise.resolve();
+    if (pending.has(index)) return pending.get(index);
+    const task = fetchFrame(index).finally(() => pending.delete(index));
+    pending.set(index, task);
+    return task;
+  }
+  async function fetchFrame(index) {
     try {
       const response = await fetch(`./assets/story-frames/${String(index).padStart(4, '0')}.webp`);
       if (!response.ok) throw new Error('Frame unavailable');
@@ -70,7 +78,7 @@ function createStorySequence(canvas, container, count) {
   async function preload() {
     if (started) return;
     started = true;
-    await Promise.all(Array.from({ length: 4 }, async () => {
+    await Promise.all(Array.from({ length: 2 }, async () => {
       while (next < count) await load(next++);
     }));
     const retry = failures; failures = [];
@@ -108,7 +116,7 @@ function createStorySequence(canvas, container, count) {
     if (!document.hidden) { lastTime = 0; wake(); }
   });
   return {
-    preload, resize,
+    preload, resize, warmup: () => load(0),
     setTarget(value) { target = Math.max(0, Math.min(1, value)); wake(); }
   };
 }
